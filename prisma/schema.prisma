@@ -1,0 +1,254 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  passwordHash String    @map("password_hash")
+  role         String    @default("EMPLOYEE")
+  isActive     Boolean   @default(true) @map("is_active")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  // Relations
+  employee     Employee?
+
+  @@map("users")
+}
+
+model Employee {
+  id          String   @id @default(cuid())
+  userId      String   @unique @map("user_id")
+  employeeId  String   @unique @map("employee_id")
+  firstName   String   @map("first_name")
+  lastName    String   @map("last_name")
+  phone       String?
+  department  String
+  position    String
+  hireDate    DateTime @map("hire_date")
+  salary      Float?
+  managerId   String?  @map("manager_id")
+  status      String   @default("ACTIVE")
+  avatarUrl   String?  @map("avatar_url")
+  address     String?
+  emergencyContact String? @map("emergency_contact")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  manager     Employee? @relation("EmployeeManager", fields: [managerId], references: [id])
+  directReports Employee[] @relation("EmployeeManager")
+
+  @@map("employees")
+}
+
+model Job {
+  id             String   @id @default(cuid())
+  title          String
+  description    String
+  department     String
+  location       String
+  employmentType String   @map("employment_type")
+  salaryMin      Int?     @map("salary_min")
+  salaryMax      Int?     @map("salary_max")
+  requirements   String?
+  benefits       String?
+  status         String   @default("OPEN")
+  postedDate     DateTime @default(now()) @map("posted_date")
+  closingDate    DateTime? @map("closing_date")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  applications   Application[]
+  interviews     Interview[]
+
+  @@map("jobs")
+}
+
+model Application {
+  id               String   @id @default(cuid())
+  jobId            String
+  candidateName    String
+  candidateEmail   String
+  candidatePhone   String?
+  resumeUrl        String?
+  coverLetter      String
+  status           String   @default("SUBMITTED")
+  appliedDate      DateTime @default(now())
+  notes            String?
+
+  job              Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  interviews       Interview[]
+  offers           Offer[]
+  candidate        Candidate? @relation(fields: [candidateEmail], references: [email])
+
+  @@map("applications")
+}
+
+model Interview {
+  id                String          @id @default(cuid())
+  applicationId     String
+  jobId             String
+  candidateName     String
+  candidateEmail    String
+  interviewType     String   @default("VIDEO")
+  scheduledDate     DateTime
+  duration          Int             @default(60) // Duration in minutes
+  location          String?         // For in-person interviews
+  meetingLink       String?         // For video interviews
+  interviewerIds    String?         // JSON string of interviewer user IDs
+  status            String @default("SCHEDULED")
+  notes             String?
+  feedback          String?
+  rating            Int?            // 1-5 rating
+  recommendation    String?
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  application       Application     @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  job               Job             @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  assessments       Assessment[]    // Add relation to assessments
+
+  @@map("interviews")
+}
+
+model Assessment {
+  id                String          @id @default(cuid())
+  interviewId       String
+  technicalSkills   Int             // 1-10 rating
+  communication     Int             // 1-10 rating
+  culturalFit       Int             // 1-10 rating
+  overallRating     Int             // 1-10 rating
+  strengths         String?
+  weaknesses        String?
+  recommendation    String          @default("NEUTRAL")
+  additionalNotes   String?
+  createdBy         String
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  interview         Interview       @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+
+  @@map("assessments")
+}
+
+enum InterviewType {
+  PHONE
+  VIDEO
+  IN_PERSON
+  PANEL
+}
+
+enum InterviewStatus {
+  SCHEDULED
+  CONFIRMED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
+enum InterviewRecommendation {
+  STRONG_HIRE
+  HIRE
+  NO_HIRE
+  STRONG_NO_HIRE
+}
+
+model LeaveRequest {
+  id          String   @id @default(cuid())
+  employeeId  String   @map("employee_id")
+  type        String
+  startDate   DateTime @map("start_date")
+  endDate     DateTime @map("end_date")
+  days        Int
+  reason      String?
+  status      String   @default("PENDING")
+  approvedBy  String?  @map("approved_by")
+  approvedAt  DateTime? @map("approved_at")
+  comments    String?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("leave_requests")
+}
+
+model Attendance {
+  id         String   @id @default(cuid())
+  employeeId String   @map("employee_id")
+  date       DateTime
+  checkIn    DateTime? @map("check_in")
+  checkOut   DateTime? @map("check_out")
+  hoursWorked Float?   @map("hours_worked")
+  status     String   @default("PRESENT")
+  notes      String?
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  @@map("attendance")
+}
+
+model Candidate {
+  id                  String    @id @default(cuid())
+  firstName           String    @map("first_name")
+  lastName            String    @map("last_name")
+  email               String    @unique
+  phone               String?
+  linkedinUrl         String?   @map("linkedin_url")
+  portfolioUrl        String?   @map("portfolio_url")
+  experienceYears     Int?      @map("experience_years")
+  currentCompany      String?   @map("current_company")
+  currentPosition     String?   @map("current_position")
+  preferredLocation   String?   @map("preferred_location")
+  expectedSalary      String?   @map("expected_salary")
+  availabilityDate    DateTime? @map("availability_date")
+  skills              String?
+  summary             String?
+  status              String    @default("ACTIVE")
+  createdAt           DateTime  @default(now()) @map("created_at")
+  updatedAt           DateTime  @updatedAt @map("updated_at")
+
+  // Relations
+  applications        Application[]
+  offers              Offer[]
+
+  @@map("candidates")
+}
+
+model Offer {
+  id              String    @id @default(cuid())
+  applicationId   String    @map("application_id")
+  candidateEmail  String    @map("candidate_email")
+  candidateName   String    @map("candidate_name")
+  position        String
+  department      String
+  salary          Int
+  startDate       DateTime  @map("start_date")
+  expiryDate      DateTime  @map("expiry_date")
+  status          String    @default("PENDING")
+  notes           String?
+  offerDate       DateTime  @default(now()) @map("offer_date")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  // Relations
+  application     Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  candidate       Candidate   @relation(fields: [candidateEmail], references: [email], onDelete: Cascade)
+
+  @@map("offers")
+}
+
