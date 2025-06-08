@@ -1,10 +1,8 @@
-import { PrismaClient } from "@prisma/client";
-import { NextRequest, NextResponse } from "next/server";
-
-const prisma = new PrismaClient();
+import { prisma } from "@/lib/database";
+import { NextResponse } from "next/server";
 
 // GET /api/careers/jobs - Get public job listings (no authentication required)
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     // Only return OPEN jobs for public viewing
     const jobs = await prisma.job.findMany({

@@ -67,7 +67,7 @@ export default function RecruitmentPage() {
   const router = useRouter();
 
   const [applications, setApplications] = useState<Application[]>([]);
-  const [interviews, setInterviews] = useState<Interview[]>([]);
+  const [interviews, setInterviews] = useState<any[]>([]);
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loadingData, setLoadingData] = useState(true);
 

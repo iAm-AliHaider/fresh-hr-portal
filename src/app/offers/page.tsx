@@ -195,7 +195,6 @@ export default function OffersPage() {
 
   const handleCreateOffer = async () => {
     try {
-      const token = getAuthToken();
       const response = await fetch("/api/offers", {
         method: "POST",
         headers: {

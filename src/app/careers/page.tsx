@@ -343,7 +343,7 @@ export default function CareersPage() {
             <div>
               <h3 className="text-lg font-semibold mb-4">About Our Company</h3>
               <p className="text-gray-300 text-sm">
-                We're a growing company that values innovation, collaboration,
+                We&apos;re a growing company that values innovation, collaboration,
                 and personal growth. Join us to be part of something amazing.
               </p>
             </div>

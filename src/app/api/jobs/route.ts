@@ -28,16 +28,21 @@ export async function GET(request: NextRequest) {
       orderBy: { postedDate: "desc" },
     });
 
+    const totalApplications = jobs.reduce(
+      (acc: number, job: { _count?: { applications?: number } }) =>
+        acc + (job._count?.applications || 0),
+      0
+    );
+
     return NextResponse.json({
-      success: true,
-      jobs: jobs,
-      total: jobs.length,
-      open: jobs.filter((job) => job.status === "OPEN").length,
+      jobs,
+      totalApplications,
+      totalCount: jobs.length,
     });
-  } catch (error) {
-    console.error("Jobs API error:", error);
+  } catch (error: unknown) {
+    console.error("Error fetching jobs:", error);
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: "Failed to fetch jobs" },
       { status: 500 }
     );
   }

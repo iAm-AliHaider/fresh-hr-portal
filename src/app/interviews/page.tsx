@@ -145,6 +145,9 @@ export default function InterviewsPage() {
 
       if (response.ok) {
         fetchInterviewData();
+      } else {
+        console.error(`Failed to update interview status: ${response.status}`);
+        alert("Failed to update interview status. Please try again.");
       }
     } catch (error) {
       console.error("Error updating interview status:", error);

@@ -127,6 +127,7 @@ export default function JobsPage() {
   };
 
   const handleEditJob = (jobId: string) => {
+    console.log("Navigating to edit job:", jobId);
     router.push(`/jobs/${jobId}/edit`);
   };
 
